@@ -2,31 +2,30 @@
 
 let workspace;
 
-// --- Command Engine ---
-const commandEngine = {
-    'move': (args) => {
-        const rabbit = document.getElementById('rabbit');
-        if (rabbit) {
-            const style = window.getComputedStyle(rabbit);
-            const currentRight = parseFloat(style.right);
-            const newRight = currentRight + (args.steps * 15);
-            rabbit.style.right = `${newRight}px`;
-        }
-    }
-};
+// --- Simple Block Reader Engine ---
+function runCode() {
+    resetCharacterPosition();
 
-function executeCommands(commandQueue) {
-    for (const command of commandQueue) {
-        if (commandEngine[command.command]) {
-            commandEngine[command.command](command.args);
+    // Get all the top-level blocks in order
+    const topBlocks = workspace.getTopBlocks(true);
+    let commands = [];
+
+    for (const block of topBlocks) {
+        if (block.type === 'move_forward') {
+            // Get the number value from the connected block
+            const numberBlock = block.getInputTargetBlock('STEPS');
+            if (numberBlock) {
+                const steps = numberBlock.getFieldValue('NUM');
+                moveCharacter(steps);
+            }
         }
     }
+
     setTimeout(checkWinCondition, 1000);
 }
-// --- End Command Engine ---
+// --- End Engine ---
 
 function init() {
-    // Custom block definition (generates JSON, not JS)
     Blockly.Blocks['move_forward'] = {
       init: function() {
         this.appendValueInput("STEPS").setCheck("Number").appendField("צעד קדימה");
@@ -36,21 +35,7 @@ function init() {
       }
     };
 
-    // Custom generator stub
-    const customGenerator = new Blockly.Generator('CUSTOM');
-    customGenerator.scrub_ = function(block, code, thisOnly) {
-        const nextBlock = block.nextConnection && block.nextConnection.targetBlock();
-        if (nextBlock) {
-            return code + ',\n' + customGenerator.blockToCode(nextBlock);
-        }
-        return code;
-    };
-
-    customGenerator['move_forward'] = function(block) {
-      const steps = Blockly.JavaScript.valueToCode(block, 'STEPS', Blockly.JavaScript.ORDER_ATOMIC) || 0;
-      const command = { command: 'move', args: { steps: steps } };
-      return JSON.stringify(command);
-    };
+    // NOTE: No custom generator is needed in this simpler approach.
 
     const blocklyDiv = document.getElementById('blockly-div');
     workspace = Blockly.inject(blocklyDiv, {
@@ -65,17 +50,7 @@ function init() {
         renderer: 'zelos',
     });
 
-    document.getElementById('run-button').addEventListener('click', () => {
-        resetCharacterPosition();
-        const code = customGenerator.workspaceToCode(workspace);
-        try {
-            const commandQueue = JSON.parse(`[${code}]`);
-            executeCommands(commandQueue);
-        } catch (e) {
-            console.error("Error parsing command queue:", e);
-        }
-    });
-
+    document.getElementById('run-button').addEventListener('click', runCode);
     document.getElementById('reset-button').addEventListener('click', resetLevel);
 }
 
@@ -86,6 +61,16 @@ function resetLevel() {
 
 function resetCharacterPosition() {
     document.getElementById('rabbit').style.right = '20px';
+}
+
+function moveCharacter(steps) {
+    const rabbit = document.getElementById('rabbit');
+    if (rabbit) {
+        const style = window.getComputedStyle(rabbit);
+        const currentRight = parseFloat(style.right);
+        const newRight = currentRight + (steps * 15);
+        rabbit.style.right = `${newRight}px`;
+    }
 }
 
 function checkWinCondition() {
