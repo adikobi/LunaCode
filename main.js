@@ -2,26 +2,35 @@
 
 let workspace;
 
-// --- Simple Block Reader Engine ---
-function runCode() {
+// --- Sequential Command Engine ---
+async function runCode() {
     resetCharacterPosition();
 
-    // Get all the top-level blocks in order
-    const topBlocks = workspace.getTopBlocks(true);
-    let commands = [];
+    let commandQueue = [];
+    let block = workspace.getTopBlocks(true)[0];
 
-    for (const block of topBlocks) {
+    while (block) {
         if (block.type === 'move_forward') {
-            // Get the number value from the connected block
             const numberBlock = block.getInputTargetBlock('STEPS');
             if (numberBlock) {
                 const steps = numberBlock.getFieldValue('NUM');
-                moveCharacter(steps);
+                commandQueue.push({ command: 'move', steps: parseInt(steps, 10) });
             }
         }
+        block = block.getNextBlock();
     }
 
-    setTimeout(checkWinCondition, 1000);
+    await processCommandQueue(commandQueue);
+}
+
+async function processCommandQueue(queue) {
+    for (const command of queue) {
+        if (command.command === 'move') {
+            // await the moveCharacter promise to ensure sequential execution
+            await moveCharacter(command.steps);
+            checkWinCondition();
+        }
+    }
 }
 // --- End Engine ---
 
@@ -64,13 +73,31 @@ function resetCharacterPosition() {
 }
 
 function moveCharacter(steps) {
-    const rabbit = document.getElementById('rabbit');
-    if (rabbit) {
+    return new Promise(resolve => {
+        const rabbit = document.getElementById('rabbit');
+        if (!rabbit) {
+            return resolve();
+        }
+
         const style = window.getComputedStyle(rabbit);
         const currentRight = parseFloat(style.right);
         const newRight = currentRight + (steps * 15);
+
+        // Function to run after the transition ends
+        const onTransitionEnd = () => {
+            rabbit.removeEventListener('transitionend', onTransitionEnd);
+            resolve();
+        };
+        rabbit.addEventListener('transitionend', onTransitionEnd);
+
         rabbit.style.right = `${newRight}px`;
-    }
+
+        // Safety timeout in case transitionend doesn't fire
+        setTimeout(() => {
+            rabbit.removeEventListener('transitionend', onTransitionEnd);
+            resolve();
+        }, 600); // A bit longer than the transition duration
+    });
 }
 
 function checkWinCondition() {
