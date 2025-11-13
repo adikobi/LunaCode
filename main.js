@@ -144,8 +144,9 @@ function resetCharacterPosition() {
 function moveCharacter(steps) {
     const rabbit = document.getElementById('rabbit');
     if (rabbit) {
-        // In RTL, "forward" is to the left. We get the current 'right' style.
-        const currentRight = rabbit.style.right ? parseFloat(rabbit.style.right) : 20;
+        // Use getComputedStyle for a reliable reading of the current position.
+        const style = window.getComputedStyle(rabbit);
+        const currentRight = parseFloat(style.right);
         const newRight = currentRight + (steps * 15); // Move 15px per step
         rabbit.style.right = `${newRight}px`;
     }
