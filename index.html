@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LunaCode</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <button id="home-button" class="icon-button">🏠</button>
+            <h1 class="title">LunaCode</h1>
+            <div class="level-status">
+                <span id="level-title">שלב 1</span>
+            </div>
+            <div class="header-controls">
+                <button id="audio-button" class="icon-button">🔊</button>
+                <button id="run-button" class="run-button">▶️ הפעל</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div id="blockly-div" class="blockly-editor"></div>
+        <div id="stage-area" class="stage">
+            <div id="character"></div>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
