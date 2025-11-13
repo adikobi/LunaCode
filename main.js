@@ -16,6 +16,25 @@ async function runCode() {
                 const steps = numberBlock.getFieldValue('NUM');
                 commandQueue.push({ command: 'move', steps: parseInt(steps, 10) });
             }
+        } else if (block.type === 'controls_repeat_ext') {
+            const timesBlock = block.getInputTargetBlock('TIMES');
+            if (timesBlock) {
+                const times = parseInt(timesBlock.getFieldValue('NUM'), 10);
+                let loopBodyBlock = block.getInputTargetBlock('DO');
+                for (let i = 0; i < times; i++) {
+                    let currentBlockInLoop = loopBodyBlock;
+                    while (currentBlockInLoop) {
+                        if (currentBlockInLoop.type === 'move_forward') {
+                            const numberBlock = currentBlockInLoop.getInputTargetBlock('STEPS');
+                            if (numberBlock) {
+                                const steps = numberBlock.getFieldValue('NUM');
+                                commandQueue.push({ command: 'move', steps: parseInt(steps, 10) });
+                            }
+                        }
+                        currentBlockInLoop = currentBlockInLoop.getNextBlock();
+                    }
+                }
+            }
         }
         block = block.getNextBlock();
     }
@@ -44,6 +63,33 @@ function init() {
       }
     };
 
+    // Define the new loop block
+    Blockly.Blocks['controls_repeat_ext'] = {
+      init: function() {
+        this.jsonInit({
+          "message0": "חזור על %1 פעמים",
+          "args0": [
+            {
+              "type": "input_value",
+              "name": "TIMES",
+              "check": "Number"
+            }
+          ],
+          "message1": "בצע %1",
+          "args1": [
+            {
+              "type": "input_statement",
+              "name": "DO"
+            }
+          ],
+          "previousStatement": null,
+          "nextStatement": null,
+          "colour": 120,
+          "tooltip": "בצע סדרת פעולות מספר פעמים."
+        });
+      }
+    };
+
     // NOTE: No custom generator is needed in this simpler approach.
 
     const blocklyDiv = document.getElementById('blockly-div');
@@ -52,7 +98,8 @@ function init() {
             'kind': 'flyoutToolbox',
             'contents': [
                 { 'kind': 'block', 'type': 'move_forward' },
-                { 'kind': 'block', 'type': 'math_number', 'fields': { 'NUM': 1 } }
+                { 'kind': 'block', 'type': 'controls_repeat_ext' },
+                { 'kind': 'block', 'type': 'math_number', 'fields': { 'NUM': 5 } }
             ]
         },
         rtl: true,
