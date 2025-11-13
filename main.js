@@ -185,15 +185,15 @@ function showSuccessAnimation() {
 
 // Initialize the application when the window loads
 window.addEventListener('load', () => {
-    init();
-
-    // Show the modal on page load
     const modal = document.getElementById('instructions-modal');
     const startButton = document.getElementById('start-button');
 
+    // Show the modal on page load
     modal.style.display = 'flex';
 
+    // When the user clicks start, hide the modal and initialize the game environment.
     startButton.onclick = function() {
         modal.style.display = 'none';
+        init(); // Initialize Blockly and event listeners AFTER the modal is closed.
     }
 });
