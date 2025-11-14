@@ -60,6 +60,28 @@ body {
     background-color: #45cba8;
 }
 
+.level-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.level-button {
+    background-color: #f0f8ff;
+    border: 2px solid #4a90e2;
+    color: #4a90e2;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.level-button.active {
+    background-color: #4a90e2;
+    color: white;
+}
+
 .main-container {
     display: flex;
     flex: 1;

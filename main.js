@@ -1,6 +1,37 @@
 // LunaCode Main JavaScript
 
 let workspace;
+let currentLevel = 1;
+
+const levels = {
+    1: {
+        title: "שלב 1: סדר פעולות",
+        instructions: {
+            title: "שלב 1: סדר פעולות",
+            p1: "המטרה: לעזור לארנב להגיע לגזר!",
+            p2: "כדי להצליח, חברו את הבלוקים הנכונים בסדר הנכון.",
+            button: "התחילו!"
+        },
+        toolbox: [
+            { 'kind': 'block', 'type': 'move_forward' },
+            { 'kind': 'block', 'type': 'math_number', 'fields': { 'NUM': 1 } }
+        ]
+    },
+    2: {
+        title: "שלב 2: לולאות",
+        instructions: {
+            title: "שלב 2: כוחה של הלולאה",
+            p1: "במקום לחבר הרבה בלוקים, השתמשו בבלוק 'חזור על...' כדי לבצע את אותה פעולה מספר פעמים!",
+            p2: "גררו את בלוק 'צעד קדימה' לתוך הלולאה.",
+            button: "הבנתי!"
+        },
+        toolbox: [
+            { 'kind': 'block', 'type': 'move_forward' },
+            { 'kind': 'block', 'type': 'controls_repeat_ext' },
+            { 'kind': 'block', 'type': 'math_number', 'fields': { 'NUM': 5 } }
+        ]
+    }
+};
 
 // --- Sequential Command Engine ---
 async function runCode() {
@@ -53,7 +84,45 @@ async function processCommandQueue(queue) {
 }
 // --- End Engine ---
 
+function loadLevel(levelNumber) {
+    currentLevel = levelNumber;
+    const levelData = levels[currentLevel];
+
+    // Update level title
+    document.getElementById('level-title').textContent = levelData.title;
+
+    // Update modal content
+    const modal = document.getElementById('instructions-modal');
+    modal.querySelector('.modal-title').textContent = levelData.instructions.title;
+    modal.querySelector('p:nth-of-type(1)').textContent = levelData.instructions.p1;
+    modal.querySelector('p:nth-of-type(2)').textContent = levelData.instructions.p2;
+    modal.querySelector('.modal-button').textContent = levelData.instructions.button;
+
+    // Update active button
+    document.querySelectorAll('.level-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.level == currentLevel);
+    });
+
+    // Update toolbox
+    if (workspace) {
+        workspace.updateToolbox({ 'kind': 'flyoutToolbox', 'contents': levelData.toolbox });
+    } else {
+        // If workspace is not ready, we will update it in init
+    }
+
+    resetLevel();
+    modal.style.display = 'flex';
+}
+
 function init() {
+    // Add event listeners for level selection buttons
+    document.querySelectorAll('.level-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const level = e.target.dataset.level;
+            loadLevel(level);
+        });
+    });
+
     Blockly.Blocks['move_forward'] = {
       init: function() {
         this.appendValueInput("STEPS").setCheck("Number").appendField("צעד קדימה");
@@ -96,11 +165,7 @@ function init() {
     workspace = Blockly.inject(blocklyDiv, {
         toolbox: {
             'kind': 'flyoutToolbox',
-            'contents': [
-                { 'kind': 'block', 'type': 'move_forward' },
-                { 'kind': 'block', 'type': 'controls_repeat_ext' },
-                { 'kind': 'block', 'type': 'math_number', 'fields': { 'NUM': 5 } }
-            ]
+            'contents': levels[currentLevel].toolbox
         },
         rtl: true,
         renderer: 'zelos',
@@ -159,10 +224,15 @@ function checkWinCondition() {
 }
 
 window.addEventListener('load', () => {
+    // Initialize the main game logic once
+    init();
+
+    // Load the first level by default
+    loadLevel(1);
+
+    // Set up the modal button to only ever hide the modal
     const modal = document.getElementById('instructions-modal');
     document.getElementById('start-button').onclick = () => {
         modal.style.display = 'none';
-        init();
     }
-    modal.style.display = 'flex';
 });
