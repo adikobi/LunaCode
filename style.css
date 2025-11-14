@@ -60,6 +60,28 @@ body {
     background-color: #45cba8;
 }
 
+.level-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.level-button {
+    background-color: #f0f8ff;
+    border: 2px solid #4a90e2;
+    color: #4a90e2;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.level-button.active {
+    background-color: #4a90e2;
+    color: white;
+}
+
 .main-container {
     display: flex;
     flex: 1;
@@ -102,6 +124,17 @@ body {
     left: 20px; /* Target position on the left */
     transform: translateY(-50%);
 }
+
+#puddle {
+    top: 50%;
+    left: 150px;
+    transform: translateY(-50%);
+}
+
+.face-north { transform: translateY(-50%) rotate(270deg); }
+.face-east { transform: translateY(-50%) rotate(0deg); }
+.face-south { transform: translateY(-50%) rotate(90deg); }
+.face-west { transform: translateY(-50%) rotate(180deg); }
 
 /* Modal Styles */
 .modal {

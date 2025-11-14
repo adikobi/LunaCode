@@ -10,10 +10,12 @@
     <header class="header">
         <div class="header-content">
             <button id="home-button" class="icon-button">🏠</button>
-            <h1 class="title">LunaCode</h1>
-            <div class="level-status">
-                <span id="level-title">שלב 1</span>
+            <div class="level-selector">
+                <button class="level-button" data-level="1">1</button>
+                <button class="level-button" data-level="2">2</button>
+                <button class="level-button" data-level="3">3</button>
             </div>
+            <h1 id="level-title" class="title"></h1>
             <div class="header-controls">
                 <button id="reset-button" class="icon-button">🔄</button>
                 <button id="audio-button" class="icon-button">🔊</button>
@@ -27,16 +29,17 @@
         <div id="stage-area" class="stage">
             <div id="rabbit" class="game-char">🐰</div>
             <div id="carrot" class="game-char">🥕</div>
+            <div id="puddle" class="game-char">💧</div>
         </div>
     </main>
 
     <!-- Instructions Modal -->
     <div id="instructions-modal" class="modal">
         <div class="modal-content">
-            <h2 class="modal-title">שלב 1: סדר פעולות</h2>
-            <p>המטרה: לעזור לארנב להגיע לגזר!</p>
-            <p>כדי להצליח, חברו את הבלוקים הנכונים בסדר הנכון.</p>
-            <button id="start-button" class="modal-button">התחילו!</button>
+            <h2 class="modal-title"></h2>
+            <p></p>
+            <p></p>
+            <button id="start-button" class="modal-button"></button>
         </div>
     </div>
 
