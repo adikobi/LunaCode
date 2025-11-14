@@ -2,6 +2,7 @@
 
 let workspace;
 let currentLevel = 1;
+let rabbitDirection = 'east'; // east, south, west, north
 
 const levels = {
     1: {
@@ -30,6 +31,22 @@ const levels = {
             { 'kind': 'block', 'type': 'controls_repeat_ext' },
             { 'kind': 'block', 'type': 'math_number', 'fields': { 'NUM': 5 } }
         ]
+    },
+    3: {
+        title: "שלב 3: תנאים",
+        instructions: {
+            title: "שלב 3: היזהרו מהשלולית!",
+            p1: "השתמשו בבלוק 'אם...' כדי לבדוק אם יש שלולית לפני הארנב.",
+            p2: "אם כן, תכננו לו מסלול עוקף כדי להגיע לגזר.",
+            button: "קדימה!"
+        },
+        toolbox: [
+            { 'kind': 'block', 'type': 'move_forward' },
+            { 'kind': 'block', 'type': 'turn_right' },
+            { 'kind': 'block', 'type': 'turn_left' },
+            { 'kind': 'block', 'type': 'if_puddle_ahead' },
+            { 'kind': 'block', 'type': 'math_number', 'fields': { 'NUM': 1 } }
+        ]
     }
 };
 
@@ -46,6 +63,28 @@ async function runCode() {
             if (numberBlock) {
                 const steps = numberBlock.getFieldValue('NUM');
                 commandQueue.push({ command: 'move', steps: parseInt(steps, 10) });
+            }
+        } else if (block.type === 'turn_right') {
+            commandQueue.push({ command: 'turn', direction: 'right' });
+        } else if (block.type === 'turn_left') {
+            commandQueue.push({ command: 'turn', direction: 'left' });
+        } else if (block.type === 'if_puddle_ahead') {
+            if (isPuddleAhead()) {
+                let innerBlock = block.getInputTargetBlock('DO');
+                while (innerBlock) {
+                    if (innerBlock.type === 'move_forward') {
+                        const numberBlock = innerBlock.getInputTargetBlock('STEPS');
+                        if (numberBlock) {
+                            const steps = numberBlock.getFieldValue('NUM');
+                            commandQueue.push({ command: 'move', steps: parseInt(steps, 10) });
+                        }
+                    } else if (innerBlock.type === 'turn_right') {
+                        commandQueue.push({ command: 'turn', direction: 'right' });
+                    } else if (innerBlock.type === 'turn_left') {
+                        commandQueue.push({ command: 'turn', direction: 'left' });
+                    }
+                    innerBlock = innerBlock.getNextBlock();
+                }
             }
         } else if (block.type === 'controls_repeat_ext') {
             const timesBlock = block.getInputTargetBlock('TIMES');
@@ -76,11 +115,48 @@ async function runCode() {
 async function processCommandQueue(queue) {
     for (const command of queue) {
         if (command.command === 'move') {
-            // await the moveCharacter promise to ensure sequential execution
             await moveCharacter(command.steps);
-            checkWinCondition();
+        } else if (command.command === 'turn') {
+            await turnRabbit(command.direction);
         }
+        checkWinCondition();
     }
+}
+
+function isPuddleAhead() {
+    const rabbit = document.getElementById('rabbit');
+    const puddle = document.getElementById('puddle');
+    const rabbitRect = rabbit.getBoundingClientRect();
+    const puddleRect = puddle.getBoundingClientRect();
+
+    // Simplified check: assumes grid-like movement
+    switch (rabbitDirection) {
+        case 'east': return rabbitRect.right < puddleRect.left && Math.abs(rabbitRect.top - puddleRect.top) < 20;
+        case 'west': return rabbitRect.left > puddleRect.right && Math.abs(rabbitRect.top - puddleRect.top) < 20;
+        case 'north': return rabbitRect.top > puddleRect.bottom && Math.abs(rabbitRect.left - puddleRect.left) < 20;
+        case 'south': return rabbitRect.bottom < puddleRect.top && Math.abs(rabbitRect.left - puddleRect.left) < 20;
+    }
+    return false;
+}
+
+function turnRabbit(turnDirection) {
+    return new Promise(resolve => {
+        const directions = ['east', 'south', 'west', 'north'];
+        const currentDirectionIndex = directions.indexOf(rabbitDirection);
+        let newDirectionIndex;
+        if (turnDirection === 'right') {
+            newDirectionIndex = (currentDirectionIndex + 1) % 4;
+        } else {
+            newDirectionIndex = (currentDirectionIndex + 3) % 4;
+        }
+        rabbitDirection = directions[newDirectionIndex];
+
+        const rabbit = document.getElementById('rabbit');
+        rabbit.className = 'game-char'; // Reset classes
+        rabbit.classList.add(`face-${rabbitDirection}`);
+
+        setTimeout(resolve, 200); // Simulate turn animation time
+    });
 }
 // --- End Engine ---
 
@@ -111,7 +187,21 @@ function loadLevel(levelNumber) {
     }
 
     resetLevel();
+    rabbitDirection = 'east'; // Reset direction on level load
+    const rabbit = document.getElementById('rabbit');
+    if(rabbit) rabbit.className = 'game-char face-east'; // Reset visual direction
     modal.style.display = 'flex';
+}
+
+function resetCharacterPosition() {
+    const rabbit = document.getElementById('rabbit');
+    const rabbit = document.getElementById('rabbit');
+    if(rabbit) {
+        rabbit.style.right = '20px';
+        rabbit.style.top = '50%';
+        rabbit.className = 'game-char face-east';
+        rabbitDirection = 'east';
+    }
 }
 
 function init() {
@@ -159,6 +249,37 @@ function init() {
       }
     };
 
+    Blockly.Blocks['turn_right'] = {
+      init: function() {
+        this.appendDummyInput().appendField("פנה ימינה ➡️");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(290);
+      }
+    };
+
+    Blockly.Blocks['turn_left'] = {
+      init: function() {
+        this.appendDummyInput().appendField("פנה שמאלה ⬅️");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(290);
+      }
+    };
+
+    Blockly.Blocks['if_puddle_ahead'] = {
+      init: function() {
+        this.jsonInit({
+          "message0": "אם יש שלולית לפני",
+          "message1": "בצע %1",
+          "args1": [{ "type": "input_statement", "name": "DO" }],
+          "previousStatement": null,
+          "nextStatement": null,
+          "colour": 210
+        });
+      }
+    };
+
     // NOTE: No custom generator is needed in this simpler approach.
 
     const blocklyDiv = document.getElementById('blockly-div');
@@ -187,15 +308,20 @@ function resetCharacterPosition() {
 function moveCharacter(steps) {
     return new Promise(resolve => {
         const rabbit = document.getElementById('rabbit');
-        if (!rabbit) {
-            return resolve();
-        }
+        if (!rabbit) { return resolve(); }
 
         const style = window.getComputedStyle(rabbit);
+        const currentTop = parseFloat(style.top);
         const currentRight = parseFloat(style.right);
-        const newRight = currentRight + (steps * 15);
+        const stepSize = steps * 15;
 
-        // Function to run after the transition ends
+        switch (rabbitDirection) {
+            case 'east': rabbit.style.right = `${currentRight + stepSize}px`; break;
+            case 'west': rabbit.style.right = `${currentRight - stepSize}px`; break;
+            case 'north': rabbit.style.top = `${currentTop - stepSize}px`; break;
+            case 'south': rabbit.style.top = `${currentTop + stepSize}px`; break;
+        }
+
         const onTransitionEnd = () => {
             rabbit.removeEventListener('transitionend', onTransitionEnd);
             resolve();

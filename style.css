@@ -125,6 +125,17 @@ body {
     transform: translateY(-50%);
 }
 
+#puddle {
+    top: 50%;
+    left: 150px;
+    transform: translateY(-50%);
+}
+
+.face-north { transform: translateY(-50%) rotate(270deg); }
+.face-east { transform: translateY(-50%) rotate(0deg); }
+.face-south { transform: translateY(-50%) rotate(90deg); }
+.face-west { transform: translateY(-50%) rotate(180deg); }
+
 /* Modal Styles */
 .modal {
     display: flex; /* Hidden by default, shown with JS */
